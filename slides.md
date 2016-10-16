@@ -249,7 +249,7 @@ app = reverser(reverser(app))
 ```
 ???
 
-see 
+see
  examples/middlewares/cappitalize_middleware.py
  examples/middlewares/reverser_middleware.py
  examples/middlewares/plumbing_middlewares.py
@@ -303,7 +303,7 @@ And with this we have learned the basics of how a WSGI application works.
 But there is a still long way from this basic WSGI app to a modern
 Python web framework.
 
-see 
+see
 
  examples/middlewares/routing.py
 
@@ -780,8 +780,8 @@ It is, in Python parlance, a non-data descriptor.
 In `pyramid` `cached_property` is called `@reify`
 
 see:
-   
-	 examples/descriptors/cached_property.py
+
+  examples/descriptors/cached_property.py
 
 ---
 # Decorators are ...
@@ -911,7 +911,7 @@ def capitalize(cls):
         def __call__(self, *args, **kwargs):
             response = super().__call__(*args, **kwargs)
             return [line.decode().upper().encode()
-						        for line in response]
+                    for line in response]
 
     return NewClass
 
@@ -921,7 +921,7 @@ class HelloWSGI:
 
     def __call__(self, environ, start_response):
         start_response('200 OK', [('Content-Type',
-				                           'text/plain')])
+                                   'text/plain')])
         yield b"Hello World!\n"
 ```
 ???
@@ -962,10 +962,10 @@ class HelloWithStyle:
 ```
 @decorator(a, b)
 def function(x, y):
-	  pass
+    pass
 
 
-# evaluates to 
+# evaluates to
 def function(a, b)
     pass
 
@@ -1049,7 +1049,7 @@ For example session store in a file, Redis or another database.
 ???
 
 ---
-### JAVA Interface style 
+### JAVA Interface style
 
 ```python
 class BaseSessionManager(object):
@@ -1108,5 +1108,5 @@ class RedisSession(BaseSession):
 
 This will crash before run time!
 
-see 
+see
    https://github.com/oz123/WSGISession/blob/base_meta/wsgisession.py#L24
