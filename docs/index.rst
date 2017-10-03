@@ -13,7 +13,7 @@ How to build your own webframework from scracth
    intro
    background
    hello_world
-   middelwares
+   middlewares
    routing
    cookies
    sessions
