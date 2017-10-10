@@ -1,4 +1,4 @@
-Hello WSGI 
+Hello WSGI
 ==========
 
 A WSGI application is just a callable object the responds to requests
@@ -16,7 +16,7 @@ invoked return the body of the response.
 It is the responsiblity of the WSGI server to implement this callback.
 That is, the Python web application or the framework simply recieve it.
 
-The WSGI application is invoked with the ``environment`` and 
+The WSGI application is invoked with the ``environment`` and
 ``start_response``, it may or may not use information from the
 ``environment``, when done it should return an iterable yielding zero
 or more strings which then become the body of the response.
@@ -26,7 +26,7 @@ before invoking it.
 The following is a complete valid WSGI application:
 
   .. code:: python
-     
+
     def hello_world_app(environ, start_response):
         status = '200 OK'  # HTTP Status
         # HTTP Headers
@@ -61,7 +61,8 @@ test our app. To make use of it you can do:
     # Serve until process is killed
     httpd.serve_forever()
 
-   .. note:: 
+
+ .. note::
    In reality, a WSGI server is usually depoloyed behing a
    full blown HTTP server, which serves as a reverse proxy for the
    WSGI server. That is, the HTTP server (for example NGinx) listen to
