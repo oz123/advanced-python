@@ -68,3 +68,19 @@ test our app. To make use of it you can do:
    WSGI server. That is, the HTTP server (for example NGinx) listen to
    HTTP or HTTPS requests on port 80 or 443 and then redirects them to
    the appropriate socket to which the WSGI server is bound to.
+
+Excercise 1
++++++++++++
+
+ Write your own callable class which is a valid WSGI application.
+
+..  admonition:: Solution
+    :class: toggle
+
+    .. code-block:: python
+
+       class HelloWSGI:
+
+            def __call__(self, environ, start_response):
+                self.start_response('200 OK', [('Content-Type', 'text/plain')])
+                yield b"Hello World!\n"
