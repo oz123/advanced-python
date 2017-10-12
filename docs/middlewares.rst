@@ -58,7 +58,7 @@ Other frameworks use ``extentions`` sometimes also called ``plugins`` or
         login_manager.init_app(app)
         db = SQLAlchemy(app)
 
-``Bottle.py`` Takes a has a similar approach:
+``Bottle.py`` has a similar approach:
 
 .. code:: python
 

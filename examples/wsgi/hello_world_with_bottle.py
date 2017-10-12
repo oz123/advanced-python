@@ -1,4 +1,4 @@
-from bottle import Bottle, run
+from bottle import Bottle, run, request
 
 app = Bottle()
 
@@ -7,4 +7,10 @@ app = Bottle()
 def index():
     return "hi"
 
-run(app, debug=True, port=8080, reloader=True)
+
+@app.route('/input/', method='POST')
+def poster():
+    return "You sent:\n {}".format(request.body.read())
+
+
+run(app, debug=True, port=8082, reloader=True)

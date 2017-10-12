@@ -37,6 +37,9 @@ The following is a complete valid WSGI application:
         return [b"Hello World"]
 
 
+Running a WSGI application
+--------------------------
+
 To actually make use of the above example, you need to invoke it
 with a valid WSGI server. Luckily, we don't need to fully setup a HTTP
 server, because the Python standard library already has already s simple
