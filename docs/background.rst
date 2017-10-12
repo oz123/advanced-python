@@ -21,7 +21,7 @@ portable web application development. This is similar to Java's
 Java web application framework to run in any web server that
 supports the servlet API. [pep-333]
 
-  .. image:: ./_static/wsgi-servers.svg
+  .. image:: ./_static/wsgi-servers.png
     :scale: 50%
 
 As stated above, WSGI was created to ease the development of Python
@@ -31,7 +31,7 @@ which in turn runs the WSGI application.
 
 The following ilustration demonstartes this setup:
 
-  .. image:: ./_static/http-server-app.svg
+  .. image:: ./_static/http-server-app.png
     :scale: 50%
 
 This setup promotes scalability and flexibility.
