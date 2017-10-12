@@ -20,6 +20,13 @@ class Chick:
 
         return decorator
 
+    def post(self, path):
+        def decorator(wrapped):
+            self.add_route(path, wrapped)
+            return wrapped
+
+        return decorator
+
 
 chick = Chick()
 
@@ -27,6 +34,13 @@ chick = Chick()
 @chick.get("/")
 def index(environ):
     return [b"Hello World!\n"]
+
+
+@chick.post("/input/")
+def test_post(environ):
+
+    r = ''.join(('{} {}\n'.format(k, v) for k,v in environ.items())).encode()
+    return [r]
 
 
 if __name__ == "__main__":
