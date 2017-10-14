@@ -11,10 +11,10 @@ def index(environ, start_response):
     """This function will be mounted on "/" and display a link
     to the hello world page."""
     start_response('200 OK', [('Content-Type', 'text/html')])
-    return [b'''Hello World Application
-               This is the Hello World application:
+    return [b'''<H1>Hello World Application</H1>\n
+               This is the Hello World application:\n
 
-`continue <hello/>`_
+<a href="/hello">continue</a>
 
 ''']
 
@@ -55,7 +55,7 @@ URL."""
 urls = [
     (r'^$', index),
     (r'hello/?$', hello),
-    (r'hello/(.+)$', hello),
+    (r'hello/(.+)/$', hello),
     (r'test/(.+)/(\d+)$', test)
 ]
 
