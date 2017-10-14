@@ -9,13 +9,13 @@ How to build your own webframework from scracth
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
+
    intro
    background
    hello_world
    middlewares
    routing
-   cookies
+   raw_wsgi
    sessions
    data_model
    metaclasses
