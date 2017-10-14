@@ -131,5 +131,56 @@ the ``Mapping``:
 ``Flask`` instance. In a later part of this course, we will examine later
 how this decorator works.
 
+Working with URL parameters
+---------------------------
+
+So far, we have a simple routing middleware. But it can't work with
+parameters, as seen in the Django and Pyramid examples above.
+A middleware can modify the response or the environment. Modifying the latter,
+we can pass new objects via the environment dictionary to the callable.
+
+Exercise 5
+----------
+
+Modify the main app matching mechanism to use regular expression groups,
+to match certain URL parts as groups. These groups are the URL args,
+the application can make use of. For example, calling ``/hello/`` should return
+``hello wolrd!``. Calling ``/hello/frank`` should return ``/hello/frank!``.
+
+.. code:: python
+
+   def hello(environ, start_response):
+       """Like the example above, but it uses the name specified in the URL."""
+       # get the name from the url if it was specified there.
+       args = environ['myapp.url_args']
+       if args:
+           subject = escape(args[0])
+       else:
+           subject = 'World'
+
+       start_response('200 OK', [('Content-Type', 'text/html')])
+       return ['''Hello {}!'''.format(subject).encode()]
+
+
+..  admonition:: Solution
+    :class: toggle
+
+    .. code:: python
+
+        urls = [
+            (r'^$', index),
+            (r'hello/?$', hello),
+            (r'hello/(.+)/$', hello),
+        ]
+
+        def application(environ, start_response):
+            path = environ.get('PATH_INFO', '').lstrip('/')
+            for regex, callback in urls:
+                match = re.search(regex, path)
+                if match:
+                    environ['myapp.url_args'] = match.groups()
+                    return callback(environ, start_response)
+
+            return not_found(environ, start_response)
 
 .. _django.urls.resolvers.ResolverMatch: https://github.com/django/django/blob/f0ffa3f4ea277f9814285085fde20baff60fc386/django/urls/resolvers.py#L29
