@@ -1,0 +1,245 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Exploiting Python’s data model &#8212; Python web framework from scracth 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metaclasses" href="metaclasses.html" />
+    <link rel="prev" title="From Raw WSGI to a framework" href="raw_wsgi.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="exploiting-python-s-data-model">
+<h1>Exploiting Python’s data model<a class="headerlink" href="#exploiting-python-s-data-model" title="Permalink to this headline">¶</a></h1>
+<p>To make our session store easy to as if it was a dictionary, we implement
+out middleware by crafting a class which behaves like that. For that purpose,
+we are taking a small diversion from WSGI to Python’s Data Model. We enter
+the realm of so called <strong>magic methods</strong> also known as <code class="docutils literal"><span class="pre">__dunder__</span></code>
+(which stands of duble underscore).</p>
+<p>The first thing to know about special methods is that they are meant to be
+called by the Python interpreter, and not by you. [Fluent Python, pg. 8].</p>
+<p>Our goal is to build the following elements of a WSGI framework.</p>
+<div class="section" id="a-dictionary-like-session-storage">
+<h2>A Dictionary like Session storage<a class="headerlink" href="#a-dictionary-like-session-storage" title="Permalink to this headline">¶</a></h2>
+<p>Using a Python session like storage we should be able to check membership
+use <cite>in</cite>, e.g.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;a72e7a6b4fcf8ae611953&#39;</span> <span class="ow">in</span> <span class="n">session_storage</span>
+</pre></div>
+</div>
+<p>We shoud also be able to retrieve items as if was a dictionary:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">session_storage</span><span class="p">[</span><span class="s1">&#39;a72e7a6b4fcf8ae611953&#39;</span><span class="p">]</span>
+<span class="go">{&#39;login-date&#39;: &#39;2017-11-09 17:13:25&#39;}</span>
+</pre></div>
+</div>
+<p>Our goal is to create a middleware that stores information in some kind of
+a persistant storage. For simplicity we start by writing this infromation
+to a file on a disk, but this can easily be extended to a Redis storgae,
+MongoDB or any database of your liking.
+Let’s assume though that session data is unstructured might look like
+a dictionary of session ID as keys, with values which are another dictionary:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="n">sessions</span> <span class="o">=</span> <span class="p">{</span>
+     <span class="s2">&quot;id1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;k1&#39;</span><span class="p">:</span> <span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="s1">&#39;k2&#39;</span><span class="p">:</span> <span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="s1">&#39;kn&#39;</span><span class="p">:</span> <span class="s1">&#39;vn&#39;</span><span class="p">}},</span>
+     <span class="s2">&quot;id2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ka1&#39;</span><span class="p">:</span> <span class="s1">&#39;va1&#39;</span><span class="p">,</span> <span class="s1">&#39;ka2&#39;</span><span class="p">:</span> <span class="s1">&#39;va2&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="s1">&#39;kan&#39;</span><span class="p">:</span> <span class="s1">&#39;van&#39;</span><span class="p">}},</span>
+     <span class="o">...</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="requests-read-only-attributes">
+<h2>Requests read only attributes<a class="headerlink" href="#requests-read-only-attributes" title="Permalink to this headline">¶</a></h2>
+<p>A Request object is a wrapper around the environment. Some frameworks, like
+Bottle, Flask and WebOb, make the attribute of a Request object read only.</p>
+<p>The most obvious way is to use <code class="docutils literal"><span class="pre">&#64;property</span></code>, but this creates a very
+verbose code, here is an example from <cite>web.request.Request</cite> (which is almost
+1000 lines of code long!):</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BaseRequest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+     <span class="o">...</span>
+
+     <span class="nd">@property</span>
+     <span class="k">def</span> <span class="nf">host_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+         <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         The URL through the host (no path)</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+         <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">environ</span>
+         <span class="n">scheme</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;wsgi.url_scheme&#39;</span><span class="p">)</span>
+         <span class="n">url</span> <span class="o">=</span> <span class="n">scheme</span> <span class="o">+</span> <span class="s1">&#39;://&#39;</span>
+         <span class="n">host</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;HTTP_HOST&#39;</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">host</span> <span class="ow">and</span> <span class="n">host</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;]&#39;</span><span class="p">:</span>
+                 <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+             <span class="k">else</span><span class="p">:</span>
+                 <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="k">else</span><span class="p">:</span>
+             <span class="n">host</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SERVER_NAME&#39;</span><span class="p">)</span>
+             <span class="n">port</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SERVER_PORT&#39;</span><span class="p">)</span>
+         <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;https&#39;</span><span class="p">:</span>
+             <span class="k">if</span> <span class="n">port</span> <span class="o">==</span> <span class="s1">&#39;443&#39;</span><span class="p">:</span>
+                 <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="k">elif</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;http&#39;</span><span class="p">:</span>
+             <span class="k">if</span> <span class="n">port</span> <span class="o">==</span> <span class="s1">&#39;80&#39;</span><span class="p">:</span>
+                 <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="n">url</span> <span class="o">+=</span> <span class="n">host</span>
+         <span class="k">if</span> <span class="n">port</span><span class="p">:</span>
+             <span class="n">url</span> <span class="o">+=</span> <span class="s1">&#39;:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">port</span>
+         <span class="k">return</span> <span class="n">url</span>
+</pre></div>
+</div>
+<p>We can do much better than creating methods and decorating them with
+properties. Instead we craft a special container class which wrapps
+the environment and allows us to access keys as if they where attributes.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">req</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">req</span><span class="o">.</span><span class="n">request_method</span>  <span class="n">REQUEST_METHOD</span>
+<span class="go">&#39;GET&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ouick-access-to-properties">
+<h2>Ouick access to properties<a class="headerlink" href="#ouick-access-to-properties" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes accessing a property can be expensive! As can be seen in the
+example above, building the host URL, we make 4 dictionary lookups, which
+isn’t taking much, but if we pass our Request object through 4 middlewares
+each asking for this property, we already make 16 lookups. This could be
+improved by calculating such properties and save the result, by using a
+specially crafted decorator:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="nd">@cached_property</span>
+<span class="k">def</span> <span class="nf">host_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This will be calucalated only once</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="n">url</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="abitility-to-extened">
+<h2>Abitility to extened<a class="headerlink" href="#abitility-to-extened" title="Permalink to this headline">¶</a></h2>
+<p>If we want our framework to be public it might be a good idea to have some
+kind of a plugin system. But even if our framework is intended for a use
+of a small team of developers, it might be a good idea to supply some
+base classes and maybe meta-classes to make sure development and extension
+are easy enough, but also safe to use.
+For example, suppose we want to replace our dictionary based session with
+a Redis cache, but we don’t want to break the API. We do this with caution,
+and we think, we might want to replace Redis in some other Key-Value
+storage. We domenstrate, how the use of meta classes can enforce programmers,
+to obay some certain structure, with out throwing a <code class="docutils literal"><span class="pre">RuntimeError</span></code> or an
+<code class="docutils literal"><span class="pre">AttributeError</span></code>, which in some cases might be too late.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">RedisSession</span><span class="p">(</span><span class="n">BaseSession</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">7</span>, in <span class="n">__new__</span>
+<span class="gr">ValueError</span>: <span class="n">RedisSession must define a method called __setitem__</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Python web framework from scracth</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">The Web and Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello WSGI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="middlewares.html">Middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_wsgi.html">From Raw WSGI to a framework</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Exploiting Python’s data model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-dictionary-like-session-storage">A Dictionary like Session storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requests-read-only-attributes">Requests read only attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ouick-access-to-properties">Ouick access to properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#abitility-to-extened">Abitility to extened</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="metaclasses.html">Metaclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summary.html">Summary</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="raw_wsgi.html" title="previous chapter">From Raw WSGI to a framework</a></li>
+      <li>Next: <a href="metaclasses.html" title="next chapter">Metaclasses</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

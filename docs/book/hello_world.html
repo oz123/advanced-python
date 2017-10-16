@@ -1,0 +1,202 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Hello WSGI &#8212; Python web framework from scracth 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Middlewares" href="middlewares.html" />
+    <link rel="prev" title="The Web and Python" href="background.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hello-wsgi">
+<h1>Hello WSGI<a class="headerlink" href="#hello-wsgi" title="Permalink to this headline">¶</a></h1>
+<p>A WSGI application is just a callable object the responds to requests
+by taking two arguments. The first one is the WSGI <code class="docutils literal"><span class="pre">environment</span></code>
+and the second is the <code class="docutils literal"><span class="pre">start_response</span></code>.
+The <code class="docutils literal"><span class="pre">environment</span></code> is a Python dictionary containing information about
+the CGI environment.
+<code class="docutils literal"><span class="pre">start_response</span></code> is a callback which takes two inputs the response
+<code class="docutils literal"><span class="pre">status</span></code> and <code class="docutils literal"><span class="pre">headers</span></code>. The status is astring representation like
+<code class="docutils literal"><span class="pre">200</span> <span class="pre">OK</span></code> or any other HTTP status code followed by a word.
+<code class="docutils literal"><span class="pre">headers</span></code> is a list of two values tuples or possible HTTP headers.
+The return value of <code class="docutils literal"><span class="pre">start</span></code> response is another callable which when
+invoked return the body of the response.</p>
+<p>It is the responsiblity of the WSGI server to implement this callback.
+That is, the Python web application or the framework simply recieve it.</p>
+<p>The WSGI application is invoked with the <code class="docutils literal"><span class="pre">environment</span></code> and
+<code class="docutils literal"><span class="pre">start_response</span></code>, it may or may not use information from the
+<code class="docutils literal"><span class="pre">environment</span></code>, when done it should return an iterable yielding zero
+or more strings which then become the body of the response.
+It may also manipulate the headers passed on to <code class="docutils literal"><span class="pre">start_response</span></code>
+before invoking it.</p>
+<p>The following is a complete valid WSGI application:</p>
+<blockquote>
+<div><div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hello_world_app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;200 OK&#39;</span>  <span class="c1"># HTTP Status</span>
+    <span class="c1"># HTTP Headers</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain; charset=utf-8&#39;</span><span class="p">)]</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+
+    <span class="c1"># The returned object is going to be printed</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;Hello World&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="running-a-wsgi-application">
+<h2>Running a WSGI application<a class="headerlink" href="#running-a-wsgi-application" title="Permalink to this headline">¶</a></h2>
+<p>To actually make use of the above example, you need to invoke it
+with a valid WSGI server. Luckily, we don’t need to fully setup a HTTP
+server, because the Python standard library already has already s simple
+HTTP server which implements the WSGI protocal which we can use to
+test our app. To make use of it you can do:</p>
+<blockquote>
+<div><blockquote>
+<div><div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="k">import</span> <span class="n">make_server</span>
+
+<span class="k">def</span> <span class="nf">hello_world_app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;200 OK&#39;</span>  <span class="c1"># HTTP Status</span>
+    <span class="c1"># HTTP Headers</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;Content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain; charset=utf-8&#39;</span><span class="p">)]</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+
+    <span class="c1"># The returned object is going to be printed</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;Hello World&quot;</span><span class="p">]</span>
+
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Serving on port 8000...&quot;</span><span class="p">)</span>
+<span class="c1"># Serve until process is killed</span>
+<span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In reality, a WSGI server is usually depoloyed behing a
+full blown HTTP server, which serves as a reverse proxy for the
+WSGI server. That is, the HTTP server (for example NGinx) listen to
+HTTP or HTTPS requests on port 80 or 443 and then redirects them to
+the appropriate socket to which the WSGI server is bound to.</p>
+</div>
+</div></blockquote>
+<div class="section" id="excercise-1">
+<h3>Excercise 1<a class="headerlink" href="#excercise-1" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>Write your own callable class which is a valid WSGI application.</div></blockquote>
+<div class="toggle admonition">
+<p class="first admonition-title">Solution</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">HelloWSGI</span><span class="p">:</span>
+
+     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">start_response</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)])</span>
+         <span class="k">yield</span> <span class="sa">b</span><span class="s2">&quot;Hello World!</span><span class="se">\n</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Python web framework from scracth</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">The Web and Python</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Hello WSGI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-a-wsgi-application">Running a WSGI application</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="middlewares.html">Middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookies.html">Cookies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sessions.html">Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Leveraging Python’s Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metaclasses.html">Metaclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summary.html">Summary</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="background.html" title="previous chapter">The Web and Python</a></li>
+      <li>Next: <a href="middlewares.html" title="next chapter">Middlewares</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

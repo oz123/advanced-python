@@ -1,0 +1,213 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>From Raw WSGI to a framework &#8212; Python web framework from scracth 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sessions" href="sessions.html" />
+    <link rel="prev" title="Routing" href="routing.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="from-raw-wsgi-to-a-framework">
+<h1>From Raw WSGI to a framework<a class="headerlink" href="#from-raw-wsgi-to-a-framework" title="Permalink to this headline">¶</a></h1>
+<p>While useful for unterstanding how WSGI works, the examples
+shown until now are still far being called a framework.
+A Python webframework usually has the following attributes:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>It pre-process the environment and yields some <cite>request</cite> object
+for the programmer to work with.
+This request is sometimes injected to the callable we program, as
+for example in Pyramid:</li>
+</ol>
+<blockquote>
+<div><div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># First view, available at http://localhost:6543/</span>
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;home&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s1">&#39;&lt;body&gt;Visit &lt;a href=&quot;/howdy&quot;&gt;hello&lt;/a&gt;&lt;/body&gt;&#39;</span><span class="p">)</span>
+
+<span class="c1"># /howdy</span>
+<span class="nd">@view_config</span><span class="p">(</span><span class="n">route_name</span><span class="o">=</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="s1">&#39;&lt;body&gt;Go back &lt;a href=&quot;/&quot;&gt;home&lt;/a&gt;&lt;/body&gt;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>or in Django:</p>
+<blockquote>
+<div><div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="k">import</span> <span class="n">HttpResponse</span>
+
+<span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Hello, world. You&#39;re at the polls index.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In other cases it is a global instace object you have to explicitly import
+and make use of, as in the case of <cite>Flask</cite> or <cite>Bottle</cite>:</p>
+<blockquote>
+<div><div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">request</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/login&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">login</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">do_the_login</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">show_the_login_form</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p class="first">Add a Response wrapper, which makes it easier to write correct responses.    As such, we don’t have manually call <cite>start_response</cite> every time. Nor do
+we remember that our return value is some kind of iterable.
+Here is an example from <cite>Flask</cite>:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+   <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="s2">&quot;Unicorns are OK&quot;</span><span class="p">)</span>
+   <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;X-Parachutes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;parachutes are cool&#39;</span>
+   <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="s1">&#39;the username&#39;</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add some smart way of handling URL and request query paramters.
+For example Django injects URL parameter to your application logic,
+which allowes you to make explicit use of them:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># in views.py</span>
+<span class="k">def</span> <span class="nf">detail</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">question_id</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;You&#39;re looking at question </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">question_id</span><span class="p">)</span>
+
+<span class="c1"># in urls.py</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">views</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+<span class="c1"># ex: /polls/</span>
+<span class="n">url</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^$&#39;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">),</span>
+<span class="c1"># ex: /polls/5/</span>
+<span class="n">url</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(?P&lt;question_id&gt;[0-9]+)/$&#39;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">detail</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;detail&#39;</span><span class="p">),</span>
+<span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div>Forms are processed and saved into a Dictionary like object,
+<a class="reference external" href="https://docs.djangoproject.com/en/1.11/ref/request-response/#django.http.HttpRequest.POST">request.POST</a> and query data in saved into a <a class="reference external" href="https://docs.djangoproject.com/en/1.11/ref/request-response/#django.http.HttpRequest.GET">request.GET</a>.</div></blockquote>
+<ol class="arabic simple" start="4">
+<li>Add session and cookie management such that you manage some state.
+Using cookies you can store information in the browser, for example
+login cookie. And using sessions you can remember how the user
+interacted with your website, for example you can remeber the login date
+and time.</li>
+<li>Optionally, add HTML templating.</li>
+<li>Optionally, add some persistency layer, e.g ORM or a NoSQL abstraction
+layer.</li>
+</ol>
+</div></blockquote>
+<p>Alas, we are not going to implement all those in just a couple of hours.
+Instead, we are going to see how we can exploit Python’s data model to build
+convinient Python APIs for out Nano Python framwork.
+We start by implementing dictionary like session storage.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Python web framework from scracth</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">The Web and Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello WSGI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="middlewares.html">Middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">From Raw WSGI to a framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sessions.html">Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Leveraging Python’s Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metaclasses.html">Metaclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summary.html">Summary</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="routing.html" title="previous chapter">Routing</a></li>
+      <li>Next: <a href="sessions.html" title="next chapter">Sessions</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

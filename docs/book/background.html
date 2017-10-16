@@ -1,0 +1,153 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>The Web and Python &#8212; Python web framework from scracth 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Hello WSGI" href="hello_world.html" />
+    <link rel="prev" title="About this course" href="intro.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="the-web-and-python">
+<h1>The Web and Python<a class="headerlink" href="#the-web-and-python" title="Permalink to this headline">¶</a></h1>
+<p>In the days before the popularity of frameworks like Django, Flask
+and other frameworks soared, development with Python for the web was
+a bit harder for comers.</p>
+<p>Python applications were often designed for only one of CGI,
+FastCGI, mod_python or some other custom API of a specific web server.
+This wide variety of choices can be a problem for new Python users,because
+generally speaking, their choice of web framework limited
+their choice of usable web servers, and vice versa.</p>
+<div class="section" id="wsgi">
+<h2>WSGI<a class="headerlink" href="#wsgi" title="Permalink to this headline">¶</a></h2>
+<p>WSGI was created as a low-level interface between web servers and
+web applications or  frameworks to promote a common ground for
+portable web application development. This is similar to Java’s
+“servlet” API makes it possible for applications written with any
+Java web application framework to run in any web server that
+supports the servlet API. [pep-333]</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/wsgi-servers.png"><img alt="_images/wsgi-servers.png" src="_images/wsgi-servers.png" style="width: 262.5px; height: 175.0px;" /></a>
+</div></blockquote>
+<p>As stated above, WSGI was created to ease the development of Python
+web applications. The handling of the requests from browser is done
+by a normal HTTP server, which routes the request to the WSGI container,
+which in turn runs the WSGI application.</p>
+<p>The following ilustration demonstartes this setup:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/http-server-app.png"><img alt="_images/http-server-app.png" src="_images/http-server-app.png" style="width: 364.0px; height: 115.5px;" /></a>
+</div></blockquote>
+<p>This setup promotes scalability and flexibility.
+As a result you can mix and match any of the above mentioned servers,
+with any of the WSGI framework, below. In fact, if you desire to, you
+build a web application mixing parts from different WSGI frameworks.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/wsgi-fw.png"><img alt="_images/wsgi-fw.png" src="_images/wsgi-fw.png" style="width: 344.0px; height: 276.5px;" /></a>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Python web framework from scracth</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this course</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Web and Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#wsgi">WSGI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello WSGI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="middlewares.html">Middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookies.html">Cookies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sessions.html">Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Leveraging Python’s Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metaclasses.html">Metaclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summary.html">Summary</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="intro.html" title="previous chapter">About this course</a></li>
+      <li>Next: <a href="hello_world.html" title="next chapter">Hello WSGI</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>

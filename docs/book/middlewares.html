@@ -1,0 +1,266 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Middlewares &#8212; Python web framework from scracth 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Routing" href="routing.html" />
+    <link rel="prev" title="Hello WSGI" href="hello_world.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="middlewares">
+<h1>Middlewares<a class="headerlink" href="#middlewares" title="Permalink to this headline">¶</a></h1>
+<p>A middleware is an object that wrapps the original application,
+hence the name.
+A middle is called between the application and the server.
+It can modify the response or the environment or route requests to
+different application objects.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/middlewares2.png"><img alt="_images/middlewares2.png" src="_images/middlewares2.png" style="width: 605.7px; height: 566.1px;" /></a>
+</div></blockquote>
+<p>Middlewares and apps are agnostic to each other,
+so we can plumb any WSGI app to our middleware,
+and our middleware to any WSGI app. Middleware can be chained,
+allowing our response or request to go through mulitple
+phases of processing.</p>
+<p>Here is for example how the Django web framework chains multiple middlewares
+before calling the application:</p>
+<div class="code shell highlight-default"><div class="highlight"><pre><span></span>$ django-admin startproject example
+$ grep -c2 -ni  middleware example/example/settings.py
+grep  -i middleware example/example/settings.py
+MIDDLEWARE = [
+    &#39;django.middleware.security.SecurityMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+    &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+</pre></div>
+</div>
+<p>Django imports these middlewares from the their
+specified module and plumbs them one after another. Let’s see how
+we can do that too.</p>
+<p>Other frameworks use <code class="docutils literal"><span class="pre">extentions</span></code> sometimes also called <code class="docutils literal"><span class="pre">plugins</span></code> or
+<code class="docutils literal"><span class="pre">includes</span></code>. For example, the Flask framework really wraps the
+<code class="docutils literal"><span class="pre">Application</span></code> instance:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Example how flask uses 3 middlewares each wrapping around the</span>
+<span class="sd">application</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask.ext.sqlalchemy</span> <span class="k">import</span> <span class="n">SQLAlchemy</span>
+<span class="kn">from</span> <span class="nn">flask.ext.bcrypt</span> <span class="k">import</span> <span class="n">Bcrypt</span>
+<span class="kn">from</span> <span class="nn">flask.ext.login</span> <span class="k">import</span> <span class="n">LoginManager</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">bcrypt</span> <span class="o">=</span> <span class="n">Bcrypt</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">login_manager</span> <span class="o">=</span> <span class="n">LoginManager</span><span class="p">()</span>
+<span class="n">login_manager</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">db</span> <span class="o">=</span> <span class="n">SQLAlchemy</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">Bottle.py</span></code> has a similar approach:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bottle</span>
+<span class="kn">from</span> <span class="nn">bottle.ext</span> <span class="k">import</span> <span class="n">sqlite</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">bottle</span><span class="o">.</span><span class="n">Bottle</span><span class="p">()</span>
+<span class="n">plugin</span> <span class="o">=</span> <span class="n">sqlite</span><span class="o">.</span><span class="n">Plugin</span><span class="p">(</span><span class="n">dbfile</span><span class="o">=</span><span class="s1">&#39;/tmp/test.db&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">plugin</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/show/:item&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT * from items where name=?&#39;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">:</span>
+       <span class="k">return</span> <span class="n">template</span><span class="p">(</span><span class="s1">&#39;showitem&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HTTPError</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;Page not found&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Bottle hides the fact the the <code class="docutils literal"><span class="pre">app.install</span></code> command is wrapping your
+application with a call plugin which takes place before your application
+and after your application login. These action could be for example opening
+and closing connections to the database before and after the request if
+needed.</p>
+<div class="section" id="a-simple-wsgi-middleware">
+<h2>A Simple WSGI Middleware<a class="headerlink" href="#a-simple-wsgi-middleware" title="Permalink to this headline">¶</a></h2>
+<p>As an example we show a simple WSGI middle which logs the
+environment dictionary to the console:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">log_environ</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;print the envrionment dictionary to the console&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_function</span><span class="p">):</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">environ</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">handler</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_function</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_inner</span>
+
+    <span class="c1"># this will show &quot;Hello World!&quot; in your browser,</span>
+    <span class="c1"># and the environment in the console</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">log_environ</span><span class="p">(</span><span class="n">hello_world_app</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="excercise-2">
+<h3>Excercise 2<a class="headerlink" href="#excercise-2" title="Permalink to this headline">¶</a></h3>
+<p>Implement your own middleware which capitalizes the response you original
+application return.</p>
+<div class="toggle admonition">
+<p class="first admonition-title">Solution</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">capitalize_response</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;dumb middleware the assumes response is a list of</span>
+<span class="sd">       strings which can be capitlized&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">response</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">_inner</span>
+
+<span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_function</span><span class="p">):</span>
+    <span class="n">start_function</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;Hello World!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+
+<span class="c1"># this will return HELLO WORLD</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">capitalize_response</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="excercise-3">
+<h3>Excercise 3<a class="headerlink" href="#excercise-3" title="Permalink to this headline">¶</a></h3>
+<p>Implement your own middleware which reverses the response. Upon calling this
+middleware twice you should see the original response, e.g.:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reverser</span><span class="p">(</span><span class="n">wsgiapp</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="o">...</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">reverser</span><span class="p">(</span><span class="n">reverser</span><span class="p">(</span><span class="n">app</span><span class="p">))</span> <span class="c1"># should return Hello WSGI!</span>
+</pre></div>
+</div>
+<div class="toggle admonition">
+<p class="first admonition-title">Solution</p>
+<div class="last highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reverser</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">_inner</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
+        <span class="n">new_response</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">response</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">new_response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_response</span>
+
+    <span class="k">return</span> <span class="n">_inner</span>
+
+<span class="k">def</span> <span class="nf">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_function</span><span class="p">):</span>
+    <span class="n">start_function</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">b</span><span class="s2">&quot;Hello World!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">]</span>
+
+<span class="c1"># this will return Hello World</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">reverser</span><span class="p">(</span><span class="n">reverser</span><span class="p">(</span><span class="n">app</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Python web framework from scracth</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">The Web and Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello WSGI</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Middlewares</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#a-simple-wsgi-middleware">A Simple WSGI Middleware</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_wsgi.html">From Raw WSGI to a framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sessions.html">Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_model.html">Leveraging Python’s Data Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metaclasses.html">Metaclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.html">Functional Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="summary.html">Summary</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="hello_world.html" title="previous chapter">Hello WSGI</a></li>
+      <li>Next: <a href="routing.html" title="next chapter">Routing</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(400);
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+  </body>
+</html>
