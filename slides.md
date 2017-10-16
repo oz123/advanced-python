@@ -1024,12 +1024,12 @@ class HelloWithStyle:
 def function(x, y):
     pass
 
-
 # evaluates to
-def function(a, b)
+
+def function(x, y)
     pass
 
-function = decorator(a, b)(function)
+function = decorator(a, b)(function)(x, y)
 ```
 ???
 
