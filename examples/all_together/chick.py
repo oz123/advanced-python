@@ -13,7 +13,7 @@ It stores session information, and it capitalizes all responses.
 class Chick:
 
     """
-    A WSGI Application frame with API inspired by Bottle and Flask.
+    A WSGI Application framework with API inspired by Bottle and Flask.
 
     There is No HTTPRequest Object and No HTTPResponse object.
 
