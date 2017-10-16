@@ -1147,7 +1147,7 @@ See:
 ```
 class BaseSessionMeta(type):
 
-    def __new__(meta, name, bas:es, class_dict):
+    def __new__(meta, name, bases, class_dict):
         # Don’t validate the abstract BaseSession class
         if bases != (object,):
             for item in ['__setitem__', '__getitem__', '__contains__']:
