@@ -3,7 +3,13 @@ import uuid
 from http.cookies import SimpleCookie
 
 
-class DictBasedSessionManager:
+class DictBasedSessionStore:
+    """
+    A reference store, which stores items in a global dictionary.
+
+    This in not suitable for a real usage (e.g. an application which
+    run with multiple workers)
+    """
 
     sessions = {}
 
@@ -19,10 +25,10 @@ class DictBasedSessionManager:
 
 class SimpleSession:
 
-    def __init__(self, manager_inst):
+    def __init__(self, storage):
         self.id = None
         self.data = {}
-        self.manager = manager_inst
+        self.store = storage
 
     def __getitem__(self, key):
         return self.data[key]
@@ -36,20 +42,31 @@ class SimpleSession:
         return default
 
     def load(self, id):
-        if id in self.manager:
-            self.data = self.manager[id]
+        """
+        Find id in storage, if failed create a new ID.
+
+        """
+        if id in self.store:
+            self.data = self.store[id]
             self.id = id
         else:
             self.data = {}
             self.id = uuid.uuid4().hex
 
     def save(self):
-        self.manager[self.id] = self.data
+        self.store[self.id] = self.data
         return self.id
 
 
 class SimpleSessionMiddleware:
-    def __init__(self, app, session_manager=DictBasedSessionManager,
+    """
+    This middleware injects a SimpleSession instance to the envrionment
+    passed to the application.
+
+    You can than put anything you want in this instance of session.
+
+    """
+    def __init__(self, app, session_manager=DictBasedSessionStore,
                  env_key='wsgisession', cookie_key='session_id'):
         self.app = app
         self.env_key = env_key
@@ -90,6 +107,7 @@ def wrapped_app(environ, start_response):
 
     start_response('200 OK', [('Content-Type', 'text/html')])
     return ['Visited {} times\n'.format(session['counter']).encode()]
+
 
 app = SimpleSessionMiddleware(wrapped_app)
 
