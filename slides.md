@@ -24,6 +24,21 @@ class: center, middle, inverse
 
 ---
 class: center, middle, inverse
+
+![-resize-50](./static/dog-2557266_1920.jpg)
+
+---
+class: center, middle, inverse
+
+![-resize-50](./static/cat-1496256_1920.jpg)
+
+---
+class: center, middle, inverse
+
+# These slides already include a unicorn.
+
+---
+class: center, middle, inverse
 # Part 1 - Web frameworks demystified
 ---
 class: center, middle, inverse
