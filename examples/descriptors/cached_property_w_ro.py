@@ -28,7 +28,7 @@ env = {"dont": "touch me", "wont": "allow this"}
 
 class Request:
 
-    read_only = ['dont', 'wont']
+    read_only = {'dont', 'wont'}
 
     def __init__(self, environ):
         self.n = 12

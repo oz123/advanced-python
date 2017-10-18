@@ -1337,12 +1337,12 @@ for word in oldlist:
 
 ## Say yes to `map`:
 ```python
-newlist = map(str.upper, oldlist)
+map_obj = map(str.upper, oldlist)
+new_list = map_obj
 ```
 ## or use a list comperhension
 ```python
 newlist = [s.upper() for s in oldlist]
-
 ```
 
 ???
