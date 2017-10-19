@@ -25,10 +25,10 @@ class DictBasedSessionStore:
 
 class SimpleSession:
 
-    def __init__(self, storage):
-        self.id = None
-        self.data = {}
+    def __init__(self, storage, id=None):
         self.store = storage
+        self.data = {}
+        self.load(id)
 
     def __getitem__(self, key):
         return self.data[key]
@@ -39,6 +39,7 @@ class SimpleSession:
     def get(self, key, default=None):
         if key in self.data:
             return self.data[key]
+
         return default
 
     def load(self, id):
@@ -77,36 +78,45 @@ class SimpleSessionMiddleware:
         cookie = SimpleCookie()
         if 'HTTP_COOKIE' in environ:
             cookie.load(environ['HTTP_COOKIE'])
+
         id = None
         if self.cookie_key in cookie:
             id = cookie[self.cookie_key].value
-        session = SimpleSession(self.manager)
-        session.load(id)
+
+        session = SimpleSession(self.manager, id=id)
         environ[self.env_key] = session
 
         def middleware_start_response(status, response_headers, exc_info=None):
-            session = environ[self.env_key]
+
             session.save()
             cookie = SimpleCookie()
             cookie[self.cookie_key] = session.id
             cookie[self.cookie_key]['path'] = '/'
             cookie_string = cookie[self.cookie_key].OutputString()
-            print(cookie_string)
             response_headers.append(('Set-Cookie', cookie_string))
             return start_response(status, response_headers, exc_info)
+
         return self.app(environ, middleware_start_response)
 
 
 def wrapped_app(environ, start_response):
 
     session = environ.get('wsgisession')
-    print(session)
     # google chrome sends 2 requests ...
+
     if environ['PATH_INFO'] != '/favicon.ico':
+
         session['counter'] = session.get('counter', 0) + 1
 
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    return ['Visited {} times\n'.format(session['counter']).encode()]
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+
+    if session['counter'] > 1:
+        response = ['Hello Again!\nYou Visited {} times'.format(
+                    session['counter'])]
+    else:
+        response = ['Hello and Welcome!']
+
+    return (x.encode() for x in response)
 
 
 app = SimpleSessionMiddleware(wrapped_app)
