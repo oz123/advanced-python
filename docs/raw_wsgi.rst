@@ -45,7 +45,8 @@ A Python webframework usually has the following attributes:
          else:
              show_the_login_form()
 
- 2. Add a Response wrapper, which makes it easier to write correct responses.    As such, we don't have manually call `start_response` every time. Nor do
+ 2. Add a Response wrapper, which makes it easier to write correct responses.
+    As such, we don't have manually call `start_response` every time. Nor do
     we remember that our return value is some kind of iterable.
     Here is an example from `Flask`:
 
