@@ -17,6 +17,9 @@ How to build your own webframework from scracth
    routing
    raw_wsgi
    data_model
+   sessions
+   requests
+   responses
    metaclasses
    functional
    summary
