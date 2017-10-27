@@ -15,6 +15,57 @@ instances.
 Attrbitute access
 -----------------
 
+Attributes are everything found in a an object instance. Attributes are, usually,
+stored in an instance`s ``__dict__``, but we will see shortly, how this is only
+partially true. Let's look at an instance ``p`` of the class ``Person``:
+
+.. code:: python
+
+   >>> class Person:
+   ...     def __init__(self, name, last_name):
+   ...         self.name = name
+   ...         self.last_name = last_name
+   ...
+   >>> p = Person("Alan", "Turing")
+   >>> p.__dict__
+   {'last_name': 'Turing', 'name': 'Alan'}
+
+When accessing ``p.name`` there is a chain of lookups of ``p`` in a few places.
+A look up in ``p.__dict__`` is almost the last action. The following examples,
+reveal gradually the full attribute access chain.
+
+>>> class Person:
+...     def __init__(self, name, last_name):
+...         self._name = name
+...         self.last_name = last_name
+...     def __name(self):
+...         return self._name.capitalize()
+...     def __name_set(self, value):
+...         self.__name = value
+...     name = property(__name, __name_set)
+...
+>>> p = Person("alan", "Turing")
+>>> p.name
+'Alan'
+>>> p.__name
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'Person' object has no attribute '__name'
+>>> p._name
+'alan'
+>>> p.__dict__
+{'_name': 'alan', 'last_name': 'Turing'}
+>>> p.
+p._Person__name(      p.__dir__(            p.__getattribute__(   p.__lt__(             p.__reduce_ex__(      p.__subclasshook__(   
+p._Person__name_set(  p.__doc__             p.__gt__(             p.__module__          p.__repr__(           p.__weakref__         
+p.__class__(          p.__eq__(             p.__hash__(           p.__ne__(             p.__setattr__(        p._name               
+p.__delattr__(        p.__format__(         p.__init__(           p.__new__(            p.__sizeof__(         p.last_name           
+p.__dict__            p.__ge__(             p.__le__(             p.__reduce__(         p.__str__(            p.name                
+>>> p.__weakref__
+>>> Person
+<class '__main__.Person'>
+>>> Person.__dict__
+mappingproxy({'__module__': '__main__', 'name': <property object at 0x7f1d409772c8>, '_Person__name': <function Person.__name at 0x7f1d4097c598>, '__weakref__': <attribute '__weakref__' of 'Person' objects>, '_Person__name_set': <function Person.__name_set at 0x7f1d4097c620>, '__init__': <function Person.__init__ at 0x7f1d40974158>, '__dict__': <attribute '__dict__' of 'Person' objects>, '__doc__': None})
 
 
 Attribute access the full picture
