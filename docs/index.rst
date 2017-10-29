@@ -23,7 +23,7 @@ How to build your own webframework from scracth
    metaclasses
    functional
    summary
-
+   exercises
 
 Indices and tables
 ==================

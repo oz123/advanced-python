@@ -72,6 +72,8 @@ test our app. To make use of it you can do:
    HTTP or HTTPS requests on port 80 or 443 and then redirects them to
    the appropriate socket to which the WSGI server is bound to.
 
+.. _exercise-1:
+
 Excercise 1
 +++++++++++
 

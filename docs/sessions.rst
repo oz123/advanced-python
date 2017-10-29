@@ -85,7 +85,7 @@ Exercise 6
 +++++++++++
 
 Implement a ``PhoneBook`` class with a ``__getitem__`` method.
-The class should have the following ``__init__``:
+The class should have the following ``__init__``::
 
 
    >>> class PhoneBook:
@@ -120,6 +120,7 @@ The class should have the following ``__init__``:
      File "<stdin>", line 1, in <module>
      File "<stdin>", line 8, in __getitem__
    KeyError: 'Homer not found in phonebook'
+
 
 This class isn't very usefull if we can't also update the underlying phone book.
 Let's add a  ``__setitem__`` to it.
