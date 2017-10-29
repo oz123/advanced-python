@@ -32,8 +32,8 @@ partially true. Let's look at an instance ``p`` of the class ``Person``:
 
 When accessing ``p.name`` there is a chain of lookups of ``p`` in a few places.
 A look up in ``p.__dict__`` is almost the last action. We will discuss the
-complete process of attribute access later. For now, we are going to present a
-partially correct image.
+complete process of attribute access later. For now, we are going to stay with
+this partially correct image.
 
 If the attribute we are trying to access is not found in the instances
 `__dict__` the same attribute will be searched in the class ``__dict__``.
@@ -76,6 +76,91 @@ method just added a new underlying attribute, so everytime we access the store,
 the interpreter needs to do an extra step to first pick up ``store`` from
 ``session.__dict__`` and then store an item in an embeded ``__dict__`` within.
 
+As already pointed above, we want our SessionStorage class to behave like a
+dictionary. To do that we need to create a class with a few special methods.
+Specifically, we are going to create a ``__getitem__`` method which alows
+us to access the session data with ``session['session_id']``.
+
+Exercise 6
++++++++++++
+
+Implement a ``PhoneBook`` class with a ``__getitem__`` method.
+The class should have the following ``__init__``:
+
+
+   >>> class PhoneBook:
+   ...      def __init__(self, phones):
+   ...          self.phones = dict(phones)
+
+
+
+   >>> class PhoneBook:
+   ...      def __init__(self, phones):
+   ...          self.phones = dict(phones)
+   ...      def __getitem__(self, item):
+   ...          try:
+   ...              return self.phones[item]
+   ...          except KeyError:
+   ...              raise KeyError("%s not found in phonebook" % item)
+   ...
+
+   >>> p = PhoneBook([("Alan", '+447737238400'), ("Edgar", "+17737328230")])
+   >>> p.phones
+   {'Edgar': '+17737328230', 'Alan': '+447737238400'}
+   >>> p['Alan']
+   '+447737238400'
+   >>> p['Homer']
+   Traceback (most recent call last):
+     File "<stdin>", line 6, in __getitem__
+   KeyError: 'Homer'
+
+   During handling of the above exception, another exception occurred:
+
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+     File "<stdin>", line 8, in __getitem__
+   KeyError: 'Homer not found in phonebook'
+
+This class isn't very usefull if we can't also update the underlying phone book.
+Let's add a  ``__setitem__`` to it.
+
+>>> class PhoneBook:
+...      def __init__(self, phones):
+...          self.phones = dict(phones)
+...      def __getitem__(self, item):
+...          try:
+...              return self.phones[item]
+...          except KeyError:
+...              raise KeyError("%s not found in phonebook" % item)
+...      def __setitem__(self, key, value):
+...          self.phones[key] = value
+...
+>>> p = PhoneBook([("Alan", '+447737238400'), ("Edgar", "+17737328230")])
+>>> p['Homer'] = '+303128234499'
+
+
+Addmitidly, the need to add an intermediate attribute ``phones`` seems
+rudimentary. So let's get rid of it.
+
+
+class PhoneBook:
+     def __init__(self, phones):
+         for (key, value) in phones:
+            setattr(self, key, value)
+     def __getitem__(self, item):
+         try:
+             return getattr(self, item)
+         except AttributeError:
+             raise KeyError("%s not found in phonebook" % item)
+     def __setitem__(self, key, value):
+         setattr(self, key, value)
+
+
+So now that got rid of the attribute ``phones``, it is important to empasize
+that we can do what ever we like in ``__setitem__`` and ``__getitem__``, that
+is in addition to modifying the object itself. We can pickle data to file, and
+unpickle it from a file, store and retrieve it from an SQL datbase or Redis
+storage.
 
 
 The full session middleware
